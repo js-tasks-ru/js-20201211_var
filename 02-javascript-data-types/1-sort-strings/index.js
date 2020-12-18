@@ -5,7 +5,7 @@
  * @returns {string[]}
  */
 export function sortStrings(arr, param = 'asc') {
-  const result = arr.slice(0);
+  const result = arr.slice();
 
   return result.sort(function(str1, str2) {
     if ((isEnglish(str1)) && (!isEnglish(str2))) {
