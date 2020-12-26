@@ -1,4 +1,7 @@
 export default class ColumnChart {
+  subElements = {};
+  chartHeight = 50;
+
   constructor({
     data = [],
     label = '',
@@ -10,99 +13,80 @@ export default class ColumnChart {
     this.link = link;
     this.value = value;
 
-    this.chartHeight = 50;
-
-    this._render();
+    this.render();
   }
 
+  getColumnBody(data) {
+    const maxValue = Math.max(...data);
+    const scale = this.chartHeight / maxValue;
 
+    return data
+      .map(item => {
+        const percent = (item / maxValue * 100).toFixed(0);
+
+        return `<div style="--value: ${Math.floor(item * scale)}" data-tooltip="${percent}%"></div>`;
+      })
+      .join('');
+  }
+
+  getLink() {
+    return this.link ? `<a class="column-chart__link" href="${this.link}">View all</a>` : '';
+  }
+
+  get template() {
+    return `
+      <div class="column-chart column-chart_loading" style="--chart-height: ${this.chartHeight}">
+        <div class="column-chart__title">
+          Total ${this.label}
+          ${this.getLink()}
+        </div>
+        <div class="column-chart__container">
+           <div data-element="header" class="column-chart__header">
+             ${this.value}
+           </div>
+          <div data-element="body" class="column-chart__chart">
+            ${this.getColumnBody(this.data)}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  render() {
+    const element = document.createElement('div');
+
+    element.innerHTML = this.template;
+
+    this.element = element.firstElementChild;
+
+    if (this.data.length) {
+      this.element.classList.remove('column-chart_loading');
+    }
+
+    this.subElements = this.getSubElements(this.element);
+  }
+
+  getSubElements(element) {
+    const elements = element.querySelectorAll('[data-element]');
+
+    return [...elements].reduce((accum, subElement) => {
+      accum[subElement.dataset.element] = subElement;
+
+      return accum;
+    }, {});
+  }
+
+  update(data) {
+    this.subElements.body.innerHTML = this.getColumnBody(data);
+  }
+
+  remove () {
+    this.element.remove();
+  }
 
   destroy() {
     this.remove();
     this.element = null;
-  }
-
-  remove() {
-    this.element.remove();
-  }
-
-  update(newData) {
-    this.data = newData;
-  }
-
-  _render() {
-    // root
-    this.element = document.createElement('div');
-    this.element.className = 'column-chart';
-    if (this.data.length === 0) {
-      this.element.classList.add('column-chart_loading');
-    }
-    this.element.style.cssText = `--chart-height: ${this.chartHeight}`;
-
-    // title row
-    const title = document.createElement('div');
-    title.className = 'column-chart__title';
-    title.innerHTML = `Total ${this.label}`;
-
-    // View All link
-    if (this.link) {
-      const viewAllLink = document.createElement('a');
-      viewAllLink.setAttribute('href', this.link);
-      viewAllLink.className = 'column-chart__link';
-      viewAllLink.innerText = 'View all';
-      title.append(viewAllLink);
-    }
-
-    this.element.append(title);
-    // end of title
-
-    // chart container
-
-    const chartContainer = document.createElement('div');
-    chartContainer.className = 'column-chart__container';
-
-    // total value
-    const chartHeader = document.createElement('div');
-    chartHeader.className = 'column-chart__header';
-    chartHeader.dataset.element = 'header';
-    chartHeader.innerText = this.value;
-    chartContainer.append(chartHeader);
-
-    // chart
-    const chart = document.createElement('div');
-    chart.className = 'column-chart__chart';
-    chart.dataset.element = 'body';
-
-    // fill data
-    if (this.data.length) {
-      const normalizedData = this._getNormalizedData(this.data, this.chartHeight);
-      for (const dataRow of normalizedData) {
-        const column = this._getColumn(dataRow.value, dataRow.percent);
-        chart.append(column);
-      }
-      chartContainer.append(chart);
-    }
-
-    this.element.append(chartContainer);
-  }
-
-  _getColumn(value, percent) {
-    const column = document.createElement('div');
-    column.style.cssText = `--value: ${value}`;
-    column.dataset.tooltip = `${percent}%`;
-    return column;
-  }
-
-  _getNormalizedData(data, maxHeight) {
-    if (!data || data.length === 0) {return;}
-
-    const max = Math.max.apply(null, data);
-    return data.map((value) => {
-      return {
-        value: Math.floor((maxHeight / max) * value),
-        percent: (value / max * 100).toFixed(0)
-      };
-    }
-    );
+    this.subElements = {};
   }
 }
