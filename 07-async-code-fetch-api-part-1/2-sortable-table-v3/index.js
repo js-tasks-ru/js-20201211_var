@@ -57,12 +57,12 @@ export default class SortableTable {
     this.render();
   }
 
-  async sortOnServer(_sort = 'title', _order = 'desc') {
+  sortOnServer(_sort = 'title', _order = 'desc') {
     const fullUrl = new URL(BACKEND_URL);
     fullUrl.pathname = this.path;
     fullUrl.searchParams.set('_order', _order);
     fullUrl.searchParams.set('_sort', _sort);
-    return fetchJson(fullUrl).then((data) => data);
+    return fetchJson(fullUrl);
   }
 
   getTableHeader() {

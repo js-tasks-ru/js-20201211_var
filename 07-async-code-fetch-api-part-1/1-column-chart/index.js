@@ -38,14 +38,6 @@ export default class ColumnChart {
       .join('');
   }
 
-  async getDataFromServer(path, range) {
-    const fullUrl = new URL(this.baseUrl);
-    fullUrl.pathname = path;
-    fullUrl.searchParams.set('from', range.from);
-    fullUrl.searchParams.set('to', range.to);
-    return await fetchJson(fullUrl);
-  }
-
   getLink() {
     return this.link ? `<a class="column-chart__link" href="${this.link}">View all</a>` : '';
   }
@@ -93,21 +85,25 @@ export default class ColumnChart {
     }, {});
   }
 
-  update(start, end) {
+  async update(start, end) {
     this.range = {
       from: start,
       to: end
     };
     this.element.classList.add('column-chart_loading');
-    this.getDataFromServer(this.path, this.range).then((data) => {
-      this.data = Object.values(data);
-      if (this.data.length) {
-        this.element.classList.remove('column-chart_loading');
-      }
-      this.value = this.data.reduce((a, b) => a + b, 0);
+
+    const fullUrl = new URL(this.baseUrl);
+    fullUrl.pathname = this.path;
+    fullUrl.searchParams.set('from', start);
+    fullUrl.searchParams.set('to', end);
+    const data = await fetchJson(fullUrl);
+    this.data = Object.values(data);
+    if (this.data.length) {
+      this.element.classList.remove('column-chart_loading');
       this.subElements.body.innerHTML = this.getColumnBody(this.data);
-      this.subElements.header.innerHTML = this.value;
-    });
+    }
+    this.value = this.data.reduce((a, b) => a + b, 0);
+    this.subElements.header.innerHTML = this.value;
   }
 
   remove () {
