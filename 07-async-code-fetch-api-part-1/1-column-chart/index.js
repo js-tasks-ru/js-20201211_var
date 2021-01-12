@@ -8,10 +8,10 @@ export default class ColumnChart {
   constructor({
     label = '',
     link = '',
-    url: path = '',
+    path = '',
     range = {
-      from: new Date('2020-01-01'),
-      to: new Date('2021-01-01')
+      from: new Date(),
+      to: new Date()
     }
   } = {}) {
     this.label = label;
